@@ -8,8 +8,10 @@
 import CoreData
 
 struct PersistenceController {
+// זה הדבר ששולט לנו בדאטה בייס
     static let shared = PersistenceController()
-
+    
+//זה הדבר ששולט לנו בתצוגת הדאטה בייס שלנו
     @MainActor
     static let preview: PersistenceController = {
         let result = PersistenceController(inMemory: true)
@@ -28,9 +30,10 @@ struct PersistenceController {
         }
         return result
     }()
-
+//קונטיינר זה הדבר ששומר לנו על המידע שאנו שמים בתוכו
     let container: NSPersistentContainer
-
+//איניט זה פעולה שרצה אוטומטית כשהפרסיסטנס בקיצור בקר התמדה שלנו מאותחל כל פעם
+//איניט זה איתחול והוא מאתחל אטומטית את האפליקצייה ומריץ את הקוד שרשמנו בתוכו
     init(inMemory: Bool = false) {
         container = NSPersistentContainer(name: "Dex")
         if inMemory {
