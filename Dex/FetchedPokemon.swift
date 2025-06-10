@@ -93,8 +93,9 @@ struct FetchedPokemon: Decodable{
         specialAttack = decodedStats[3]
         specialDefense = decodedStats[4]
         speed = decodedStats[5]
-        
+        //השורה הזו מפענחת בעזרת המפתחות שיצרנו למעלה את המידע של סריטס
         let spriteContainer = try container.nestedContainer(keyedBy: CodingKeys.SpriteKeys.self, forKey: .sprites)
+        //פה זה מפאנח את הפיאנוח מהשורה הקודמת ומתאים את המידע אליו
         sprite = try spriteContainer.decode(URL.self, forKey: .sprite)
         shiny = try spriteContainer.decode(URL.self, forKey: .shiny)
     }
