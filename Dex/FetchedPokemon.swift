@@ -46,12 +46,13 @@ struct FetchedPokemon: Decodable{
             case shiny = "frontShiny"
         }
     }
-    
+    //זהו קוד איתחול שמפענחת אובייקט מגייסון
     init(from decoder: any Decoder) throws {
+        //קוד זה אומר לתת גישה לנתוני גייסון כמילון לפי המפתחות שהגדרנו בקודינגקייס
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        
+        //קוד זה אומר להוציא מהגייסון את ערך המפתחות איידי ותמיר אותו לאינט16 ותשמור בגוף איידי
         id = try container.decode(Int16.self, forKey: .id)
-        
+        //קוד זה אומר להוציא מגייסון את ערך המפתחות שם ולהמיר לאותיות ולשמור בגוף שמות
         name = try container.decode(String.self, forKey: .name)
         //כל זה קשור לטייפס למטה
         //הגדר משתנה בשם דקודד טייפס שהוא מערך של מחרוזות ומהתחל אותו כריק

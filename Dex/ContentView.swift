@@ -20,15 +20,44 @@ struct ContentView: View {
     let fetcher = FetchService()
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             List {
                 ForEach(pokedex) { pokemon in
-                    NavigationLink {
-                        Text(pokemon.name ?? "no name")//הקוד הוא אופציונאלי לכן סימן שלאלה אומר אם לא מוצא שם אז שיציג שאין שם
-                    } label: {
-                        Text(pokemon.name ?? "no name")
+                    //כאן בגדרנו בסוגריים על מה להתבסס
+                    NavigationLink(value: pokemon) {//כאן הגדרנו שיציג תמונה לכל תבנית
+                        AsyncImage(url: pokemon.sprite) { image in
+                            image
+                                .resizable()
+                                .scaledToFit()
+                        } placeholder: {
+                            ProgressView()
+                        }
+                        .frame(width: 100, height: 100)
+                        //כאן אנו מגדירים את השמות שיופיעו ליד התמונה
+                        VStack(alignment: .leading) {
+                            Text(pokemon.name!.capitalized)
+                                .fontWeight(.bold)
+                            
+                            HStack{//כאן הגדרנו שיציג את הסוג של כל פוקימון
+                                ForEach(pokemon.types!, id: \.self) { type in
+                                    Text(type.capitalized)
+                                        .font(.subheadline)
+                                        .fontWeight(.bold)
+                                        .foregroundStyle(.black)
+                                        .padding(.horizontal, 13)
+                                        .padding(.vertical, 5)
+                                        .background(Color(type.capitalized))
+                                        .clipShape(.capsule)
+                                }
+                            }
+                        }
                     }
                 }
+            }//כאן הגדרנו כותרת במסך הראשי
+            .navigationTitle("Pokedex")
+            //כאן הגרנו מה יציג בכל תבנית פוקימון בתוכה
+            .navigationDestination(for: Pokemon.self) { pokemon in
+                Text(pokemon.name ?? "no name")//הקוד הוא אופציונאלי לכן סימן שלאלה אומר אם לא מוצא שם אז שיציג שאין שם
             }
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
