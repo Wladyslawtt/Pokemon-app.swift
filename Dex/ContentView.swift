@@ -12,12 +12,27 @@ struct ContentView: View {
     //זה נותן לנו גישה לדאטה בייס מנגר
     @Environment(\.managedObjectContext) private var viewContext
 
-    @FetchRequest(//זה פעולה שממיינת לנו את המידע לדוגמא כאן אנו ממיינים לפי איידי
-        sortDescriptors: [NSSortDescriptor(keyPath: \Pokemon.id, ascending: true)],
-        animation: .default)
-    private var pokedex: FetchedResults<Pokemon>
+    @FetchRequest<Pokemon>(//זה פעולה שממיינת לנו את המידע לדוגמא כאן אנו ממיינים לפי איידי
+        sortDescriptors: [SortDescriptor(\.id)],
+        animation: .default
+    )private var pokedex
+    //כאן יבאנו סרגל חיפוש
+    @State private var searchText = ""
     //כאן יבאנו את קובץ הפטש סקוויס
     let fetcher = FetchService()
+    //כאן אנו מגדירים את החיפוש עצמו
+    private var dynamicPredicate: NSPredicate {
+        var predicates: [NSPredicate] = [] //החיפוש ריק כברירת מחדל כך הגדרנו
+        
+        //Search Predicate
+        if !searchText.isEmpty{//אם החיפוש לא ריק
+            predicates.append(NSPredicate(format: "name contains[c] %@", searchText))//לסנן לפי שם ולהציג רק מה שחיפשנו
+        }
+        //Filter By Favourite Predicate
+        
+        //Combine Predicates
+        return NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
+    }
 
     var body: some View {
         NavigationStack {
@@ -55,6 +70,14 @@ struct ContentView: View {
                 }
             }//כאן הגדרנו כותרת במסך הראשי
             .navigationTitle("Pokedex")
+            //כאן הוספנו סרגל חיפוש לתצוגה
+            .searchable(text: $searchText, prompt: "Find a Pokemon")
+            //כאן ביטלנו את התיקון האוטומטי
+            .autocorrectionDisabled()
+            //כאן הגדרנו מה יציג אחרי שנחפש
+            .onChange(of: searchText) {
+                pokedex.nsPredicate = dynamicPredicate
+            }
             //כאן הגרנו מה יציג בכל תבנית פוקימון בתוכה
             .navigationDestination(for: Pokemon.self) { pokemon in
                 Text(pokemon.name ?? "no name")//הקוד הוא אופציונאלי לכן סימן שלאלה אומר אם לא מוצא שם אז שיציג שאין שם
