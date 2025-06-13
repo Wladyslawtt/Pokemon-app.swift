@@ -18,6 +18,8 @@ struct ContentView: View {
     )private var pokedex
     //כאן יבאנו סרגל חיפוש
     @State private var searchText = ""
+    //כאן הגדרנו סינון לפי אהובים כברירת מחדל הוא כבוי
+    @State private var filterByFavorites = false
     //כאן יבאנו את קובץ הפטש סקוויס
     let fetcher = FetchService()
     //כאן אנו מגדירים את החיפוש עצמו
@@ -29,9 +31,11 @@ struct ContentView: View {
             predicates.append(NSPredicate(format: "name contains[c] %@", searchText))//לסנן לפי שם ולהציג רק מה שחיפשנו
         }
         //Filter By Favourite Predicate
-        
+        if filterByFavorites {//אם הוא מסונן לפי אהובים
+            predicates.append(NSPredicate(format: "favorite == %d", true))
+        }
         //Combine Predicates
-        return NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
+        return NSCompoundPredicate(andPredicateWithSubpredicates: predicates)//כאן הוא מחזיר לנו את כל הסינון והחיפוש
     }
 
     var body: some View {
@@ -50,8 +54,15 @@ struct ContentView: View {
                         .frame(width: 100, height: 100)
                         //כאן אנו מגדירים את השמות שיופיעו ליד התמונה
                         VStack(alignment: .leading) {
-                            Text(pokemon.name!.capitalized)
-                                .fontWeight(.bold)
+                            HStack{
+                                Text(pokemon.name!.capitalized)
+                                    .fontWeight(.bold)
+                                //כאן הגדרנו ליד כל מועדף תהיה כוכבית
+                                if pokemon.favorite{
+                                    Image(systemName: "star.fill")
+                                        .foregroundStyle(.yellow)
+                                }
+                            }
                             
                             HStack{//כאן הגדרנו שיציג את הסוג של כל פוקימון
                                 ForEach(pokemon.types!, id: \.self) { type in
@@ -78,13 +89,23 @@ struct ContentView: View {
             .onChange(of: searchText) {
                 pokedex.nsPredicate = dynamicPredicate
             }
+            //כאן הגדרנו שיציג לנו את הסינון
+            .onChange(of: filterByFavorites) {
+                pokedex.nsPredicate = dynamicPredicate
+            }
             //כאן הגרנו מה יציג בכל תבנית פוקימון בתוכה
             .navigationDestination(for: Pokemon.self) { pokemon in
                 Text(pokemon.name ?? "no name")//הקוד הוא אופציונאלי לכן סימן שלאלה אומר אם לא מוצא שם אז שיציג שאין שם
             }
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    EditButton()
+                    Button { //כאן אנו מגדירים כפתור סינון
+                        filterByFavorites.toggle() //מה הכפתור יעשה
+                    } label: { //איך הכפתור יראה
+                        Label("Filter by favorites", systemImage: filterByFavorites ? "star.fill" : "star")
+                        //אם הוא מסונן אז יהיה כוכב מלא ואם לא אז כוכב רגיל
+                    }
+                    .tint(.yellow)
                 }
                 ToolbarItem {
                     Button("Add Item", systemImage: "plus") {
@@ -117,6 +138,11 @@ struct ContentView: View {
                     pokemon.speed = fetchedPokemon.speed
                     pokemon.sprite = fetchedPokemon.sprite
                     pokemon.shiny = fetchedPokemon.shiny
+                    //זה בדיקה זמנים לראות שאכן הפונקציה של הסינון למועדף עובד
+//                    if pokemon.id % 2 == 0 {
+//                        pokemon.favorite = true
+//                    }
+                    
                     //כאן אנו שומרים את כל מה שהגדרנו במסד הנתונים
                     try viewContext.save()
                 }catch{
