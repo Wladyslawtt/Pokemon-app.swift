@@ -11,8 +11,10 @@ import CoreData
 struct ContentView: View {
     //זה נותן לנו גישה לדאטה בייס מנגר
     @Environment(\.managedObjectContext) private var viewContext
-
-    @FetchRequest<Pokemon>(//זה פעולה שממיינת לנו את המידע לדוגמא כאן אנו ממיינים לפי איידי
+    //זוהי בקשה פטש רקווסט שמביאה נתונים ממסד הנתונים של קור דאטה במקרה הזה היא נועדה לשלוף את כל האובייקטים מסוג פוקימון ולשמור אותם במשתנה אול
+    @FetchRequest<Pokemon>(sortDescriptors: []) private var all
+//בקיצור הפטשים יוצרים תצוגות ממוחשבות עם כל הנתונים כמו חלונות בעצם כל פטש זה חלון נפרד סוגשל במקום שניצור אותם ידנית
+    @FetchRequest<Pokemon>(//זה פעולה שממיינת לנו את המידע ושומרת אותו במשתנה פוקידקס לדוגמא כאן אנו ממיינים לפי איידי
         sortDescriptors: [SortDescriptor(\.id)],
         animation: .default
     )private var pokedex
@@ -39,7 +41,7 @@ struct ContentView: View {
     }
 
     var body: some View {//האיף מריצה ישר את כל הפוקימונים ומוסיפה חלון הוראות מה לעדות אם לא יוצג כלום
-        if pokedex.isEmpty {//למקרה שהמסך יהיה ריק שתופיע הודע מה לעשות
+        if all.isEmpty {//למקרה שהמסך יהיה ריק שתופיע הודע מה לעשות
             //הוספנו שיהיה ללחות על הפונקציה שיצרנו שיופיעו פוקימונים ומקרה ולא יופיע כלום
             ContentUnavailableView {
                 Label("NO POKEMON", image: .nopokemon)
@@ -94,10 +96,25 @@ struct ContentView: View {
                                     }
                                 }
                             }
+                            .swipeActions(edge: .leading) {//כאן הוספנו החלקה למועדפים
+                                //אם פוקימון פייבור שווה לטרו אז להחסיר מהמועדפים
+                                //ואם אחרת אז להוסיף למועדפים
+                                Button(pokemon.favorite ? "Remove from favorites" : "Add to Favorites", systemImage: "star") {
+                                    //כאן הגדרנו שישלח לתקיית מועדפים את כל מי שהחלקנו
+                                    pokemon.favorite.toggle()
+                                    //כאן הגדרנו שמירת מועדפים ושיתפוס שגיאה אם יהיה
+                                    do{
+                                        try viewContext.save()
+                                    }catch{
+                                        print(error)
+                                    }
+                                }
+                                .tint(pokemon.favorite ? .gray : .yellow)
+                            }
                         }
                     } footer: {//הוספנו עוד חלון הזהרה עם כפתור איך לפתור את הבעיה הפעם בתוך התצוגה בראשית עצמה
                         //אם יש פחות מ151 פוקימונים זה יציג הזהרה ודרך פיתרון
-                        if pokedex.count < 151 {
+                        if all.count < 151 {
                             ContentUnavailableView {
                                 Label("Missing Pokemon", image: .nopokemon)
                             } description: {
