@@ -38,92 +38,121 @@ struct ContentView: View {
         return NSCompoundPredicate(andPredicateWithSubpredicates: predicates)//כאן הוא מחזיר לנו את כל הסינון והחיפוש
     }
 
-    var body: some View {
-        NavigationStack {
-            List {
-                ForEach(pokedex) { pokemon in
-                    //כאן בגדרנו בסוגריים על מה להתבסס
-                    NavigationLink(value: pokemon) {//כאן הגדרנו שיציג תמונה לכל תבנית
-                        AsyncImage(url: pokemon.sprite) { image in
-                            image
-                                .resizable()
-                                .scaledToFit()
-                        } placeholder: {
-                            ProgressView()
-                        }
-                        .frame(width: 100, height: 100)
-                        //כאן אנו מגדירים את השמות שיופיעו ליד התמונה
-                        VStack(alignment: .leading) {
-                            HStack{
-                                Text(pokemon.name!.capitalized)
-                                    .fontWeight(.bold)
-                                //כאן הגדרנו ליד כל מועדף תהיה כוכבית
-                                if pokemon.favorite{
-                                    Image(systemName: "star.fill")
-                                        .foregroundStyle(.yellow)
+    var body: some View {//האיף מריצה ישר את כל הפוקימונים ומוסיפה חלון הוראות מה לעדות אם לא יוצג כלום
+        if pokedex.isEmpty {//למקרה שהמסך יהיה ריק שתופיע הודע מה לעשות
+            //הוספנו שיהיה ללחות על הפונקציה שיצרנו שיופיעו פוקימונים ומקרה ולא יופיע כלום
+            ContentUnavailableView {
+                Label("NO POKEMON", image: .nopokemon)
+            } description: {
+                Text("There ain't any Pokemon yet.\nFetch some Pokemon to get started")
+            } actions: {
+                Button("Fetch Pokemon", systemImage: "antenna.radiowaves.left.and.right") {
+                    getPokemon(from: 1) //כאן הגדרנו שזה יציג פוקימונים ממספר מזוהה 1 והלך
+                }
+                .buttonStyle(.borderedProminent)
+            }
+
+        }else{
+            
+            NavigationStack {
+                List {
+                    Section {
+                        ForEach(pokedex) { pokemon in
+                            //כאן בגדרנו בסוגריים על מה להתבסס
+                            NavigationLink(value: pokemon) {//כאן הגדרנו שיציג תמונה לכל תבנית
+                                AsyncImage(url: pokemon.sprite) { image in
+                                    image
+                                        .resizable()
+                                        .scaledToFit()
+                                } placeholder: {
+                                    ProgressView()
+                                }
+                                .frame(width: 100, height: 100)
+                                //כאן אנו מגדירים את השמות שיופיעו ליד התמונה
+                                VStack(alignment: .leading) {
+                                    HStack{
+                                        Text(pokemon.name!.capitalized)
+                                            .fontWeight(.bold)
+                                        //כאן הגדרנו ליד כל מועדף תהיה כוכבית
+                                        if pokemon.favorite{
+                                            Image(systemName: "star.fill")
+                                                .foregroundStyle(.yellow)
+                                        }
+                                    }
+                                    
+                                    HStack{//כאן הגדרנו שיציג את הסוג של כל פוקימון
+                                        ForEach(pokemon.types!, id: \.self) { type in
+                                            Text(type.capitalized)
+                                                .font(.subheadline)
+                                                .fontWeight(.bold)
+                                                .foregroundStyle(.black)
+                                                .padding(.horizontal, 13)
+                                                .padding(.vertical, 5)
+                                                .background(Color(type.capitalized))
+                                                .clipShape(.capsule)
+                                        }
+                                    }
                                 }
                             }
-                            
-                            HStack{//כאן הגדרנו שיציג את הסוג של כל פוקימון
-                                ForEach(pokemon.types!, id: \.self) { type in
-                                    Text(type.capitalized)
-                                        .font(.subheadline)
-                                        .fontWeight(.bold)
-                                        .foregroundStyle(.black)
-                                        .padding(.horizontal, 13)
-                                        .padding(.vertical, 5)
-                                        .background(Color(type.capitalized))
-                                        .clipShape(.capsule)
+                        }
+                    } footer: {//הוספנו עוד חלון הזהרה עם כפתור איך לפתור את הבעיה הפעם בתוך התצוגה בראשית עצמה
+                        //אם יש פחות מ151 פוקימונים זה יציג הזהרה ודרך פיתרון
+                        if pokedex.count < 151 {
+                            ContentUnavailableView {
+                                Label("Missing Pokemon", image: .nopokemon)
+                            } description: {
+                                Text("The fetch was interrupted!.\nFetch the rest of the pokemon.")
+                            } actions: { Button("Fetch Pokemon", systemImage: "antenna.radiowaves.left.and.right") {
+                                getPokemon(from: pokedex.count + 1)//כאן הגדרנו שאחרי שיזהה את הראשון בסדר פשוט יוסיף את שאר הפוקימונים אחד אחרי השני לפי הסדר
                                 }
+                                .buttonStyle(.borderedProminent)
                             }
                         }
                     }
+                }//כאן הגדרנו כותרת במסך הראשי
+                .navigationTitle("Pokedex")
+                //כאן הוספנו סרגל חיפוש לתצוגה
+                .searchable(text: $searchText, prompt: "Find a Pokemon")
+                //כאן ביטלנו את התיקון האוטומטי
+                .autocorrectionDisabled()
+                //כאן הגדרנו מה יציג אחרי שנחפש
+                .onChange(of: searchText) {
+                    pokedex.nsPredicate = dynamicPredicate
                 }
-            }//כאן הגדרנו כותרת במסך הראשי
-            .navigationTitle("Pokedex")
-            //כאן הוספנו סרגל חיפוש לתצוגה
-            .searchable(text: $searchText, prompt: "Find a Pokemon")
-            //כאן ביטלנו את התיקון האוטומטי
-            .autocorrectionDisabled()
-            //כאן הגדרנו מה יציג אחרי שנחפש
-            .onChange(of: searchText) {
-                pokedex.nsPredicate = dynamicPredicate
-            }
-            //כאן הגדרנו שיציג לנו את הסינון
-            .onChange(of: filterByFavorites) {
-                pokedex.nsPredicate = dynamicPredicate
-            }
-            //כאן הגרנו מה יציג בכל תבנית פוקימון בתוכה
-            .navigationDestination(for: Pokemon.self) { pokemon in
-                Text(pokemon.name ?? "no name")//הקוד הוא אופציונאלי לכן סימן שלאלה אומר אם לא מוצא שם אז שיציג שאין שם
-            }
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button { //כאן אנו מגדירים כפתור סינון
-                        filterByFavorites.toggle() //מה הכפתור יעשה
-                    } label: { //איך הכפתור יראה
-                        Label("Filter by favorites", systemImage: filterByFavorites ? "star.fill" : "star")
-                        //אם הוא מסונן אז יהיה כוכב מלא ואם לא אז כוכב רגיל
-                    }
-                    .tint(.yellow)
+                //כאן הגדרנו שיציג לנו את הסינון
+                .onChange(of: filterByFavorites) {
+                    pokedex.nsPredicate = dynamicPredicate
                 }
-                ToolbarItem {
-                    Button("Add Item", systemImage: "plus") {
-                        getPokemon()
+                //כאן הגרנו מה יציג בכל תבנית פוקימון בתוכה
+                .navigationDestination(for: Pokemon.self) { pokemon in
+                    Text(pokemon.name ?? "no name")//הקוד הוא אופציונאלי לכן סימן שלאלה אומר אם לא מוצא שם אז שיציג שאין שם
+                }
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Button { //כאן אנו מגדירים כפתור סינון
+                            filterByFavorites.toggle() //מה הכפתור יעשה
+                        } label: { //איך הכפתור יראה
+                            Label("Filter by favorites", systemImage: filterByFavorites ? "star.fill" : "star")
+                            //אם הוא מסונן אז יהיה כוכב מלא ואם לא אז כוכב רגיל
+                        }
+                        .tint(.yellow)
                     }
                 }
             }
+            //        .task{ //זה מריץ ישר את הפונקציה שיצרנו ומביא את כל הפוקימונים במקום שנלחץ כל פעם על הפלוס
+            //            getPokemon()
+            //        }
         }
     }
-    
-    private func getPokemon() {//כאן הגדרנו פונקצייה שתציג לנו פוקימונים
+    //הגדרנו שהפונקציה תתחיל ממספר מזוהה של הפוקימון
+    private func getPokemon(from id:Int) {//כאן הגדרנו פונקצייה שתציג לנו פוקימונים
         Task{
-            for id in 1..<152 {//כאן אנו מריצים 151 פעמים פונקציית פטש כדי שיציג לנו איידי של כל ה151 פוקימונים מהדאטה
+            for i in id..<152 {//כאן אנו מריצים 151 פעמים פונקציית פטש כדי שיציג לנו איידי של כל ה151 פוקימונים מהדאטה
                 do {//למקרה שתיהיה שגיאה אנו עושים את הפקודה בדו
                     //הפטש פוקימון פה הוא לא אותו הדבר כמו הקובץ שיצרנו
                     //הפטש כאן קשור לפטש סרוויס שיבאנו למעלה
                     //הוא מיבא מהפטש סרוויס את האיידי ששמור בפטש פוקימון
-                    let fetchedPokemon = try await fetcher.fetchPokemon(id)
+                    let fetchedPokemon = try await fetcher.fetchPokemon(i)
                     //כאן הגדרנו שיציג את הפוקימונים בוויוקונטנט למעלה
                     let pokemon = Pokemon(context: viewContext)
                     //כאן הגדרנו שיציג את הקטגוריות שפיענחנו בפטש סרוויס
