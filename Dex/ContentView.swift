@@ -140,10 +140,11 @@ struct ContentView: View {
                 .onChange(of: filterByFavorites) {
                     pokedex.nsPredicate = dynamicPredicate
                 }
-                //כאן הגרנו מה יציג בכל תבנית פוקימון בתוכה
+                //כאן הגדרנו מה יציג בכל תבנית פוקימון בתוכה
                 .navigationDestination(for: Pokemon.self) { pokemon in
-                    Text(pokemon.name ?? "no name")//הקוד הוא אופציונאלי לכן סימן שלאלה אומר אם לא מוצא שם אז שיציג שאין שם
-                }
+                    PokemonDetail()
+                        .environmentObject(pokemon)
+                 }
                 .toolbar {
                     ToolbarItem(placement: .navigationBarTrailing) {
                         Button { //כאן אנו מגדירים כפתור סינון

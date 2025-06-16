@@ -10,9 +10,23 @@ import CoreData
 struct PersistenceController {
 // זה הדבר ששולט לנו בדאטה בייס
     static let shared = PersistenceController()
+//הפונקציה פרוויו פוקימון מחזירה פוקימון אחד לדוגמה מתוך הדאטהסייס כדי שאפשר יהיה להשתמש בו בתצוגות פרוויוס בלי לטעון נתונים אמיתיים מהאפליקציה
+    static var previewPokemon: Pokemon {//מגדיר משתנה סטטי בשם פרוויו פוקימון שמחזיר פוקימון
+        //יוצרים משתנה קונטקסט שמיבא את הקונטקסט מהדאטהבייס לפרוויו
+        //פרסיסטקונטרולר פרוויו זו גרסה מיוחדת של הדאטה בייס לפריוויו בלבד
+        let context = PersistenceController.preview.container.viewContext
+        //יוצר בקשת שליפה פטש מסוג פוקימון כלומר בקשה לקרוא אובייקטים מסוג פוקימון מהדאטהבייס
+        let fetchRequest: NSFetchRequest<Pokemon> = Pokemon.fetchRequest()
+        //מגביל את הבקשה שישלוף רק פורימון אחד במקום את כולם
+        fetchRequest.fetchLimit = 1
+        //יצרנו משתנה שיביא לנו את התוצאה
+        //המשתנה מנסה להוציא את התוצאה על קונטקסט ויבצע את שליפת הנתונים שהגדרנו למעלה
+        let results = try! context.fetch(fetchRequest)
+        //מחזיר לי את התוצאה עם פוקימון אחד כפי שהגדרנו
+        return results.first!
+    }
     
 //זה הדבר ששולט לנו בתצוגת הדאטה בייס שלנו
-    @MainActor
     static let preview: PersistenceController = {
         let result = PersistenceController(inMemory: true)
         let viewContext = result.container.viewContext
