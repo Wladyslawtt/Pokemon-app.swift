@@ -22,8 +22,8 @@ struct PokemonDetail: View {
     var body: some View {
         ScrollView {
             ZStack {
-                //כאן יבאנו את הרקע
-                Image(.normalgrasselectricpoisonfairy)
+                //כאן יבאנו את הרקע שהגדרנו בקובץ פורימוןאקס
+                Image(pokemon.background)
                     .resizable()
                     .scaledToFit()
                     .shadow(color: .black, radius: 6)
