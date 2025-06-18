@@ -29,7 +29,9 @@ struct PokemonDetail: View {
                     .shadow(color: .black, radius: 6)
                 //כאן יבאנו את התמונה של הפוקימון
                 //אפשר לראת אותו בסימולטור בוויו בצד אי אפשר כי משהו שבור פה אחי אבל בעיקרון יש תמונה פשוט לא רואים
-                AsyncImage(url: pokemon.sprite) { image in
+                //אם שייני פעיל התמונה תהיה במצב שייני ואם לא אז רגילה
+                //שייני זה מצב שהופך את הצבע של הפוקימון
+                AsyncImage(url: showShiny ? pokemon.shiny : pokemon.sprite) { image in
                     image
                         .interpolation(.none)
                         .resizable()
@@ -79,6 +81,16 @@ struct PokemonDetail: View {
             Stats(pokemon: pokemon)
         }
         .navigationTitle(pokemon.name!.capitalized)
+        .toolbar {//מוסיף סרגל כלים
+            ToolbarItem(placement: .topBarTrailing) {//מוסיף כפתור למעלה בצד ימין
+                Button {//מפעל כפתור שייני
+                    showShiny.toggle()
+                } label: {//אם הוא פעיל אז הכפתור יהיה מלא ואם לא אז ריק
+                    Image(systemName: showShiny ? "wand.and.stars" : "wand.and.stars.inverse")
+                        .tint(showShiny ? .yellow : .primary)//אם פעיל הוא יהיה צהוב ואם לא אז רגיל
+                }
+            }
+        }
     }
 }
 
