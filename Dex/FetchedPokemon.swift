@@ -17,8 +17,8 @@ struct FetchedPokemon: Decodable{
     let specialAttack: Int16
     let specialDefense: Int16
     let speed: Int16
-    let sprite: URL
-    let shiny: URL
+    let spriteURL: URL
+    let shinyURL: URL
     //פשוט תרשום איניט וכל זה יופיע לך אחרי זהגדרת סטרוקט
     //שים לב שלא תמיד מה שהגרתה בסטרוקט באמת יפואנח לאפליקציה אז צריך להוסיפ מפתחות
     enum CodingKeys: CodingKey {
@@ -42,8 +42,8 @@ struct FetchedPokemon: Decodable{
         }
 //        אנחנו לא תמיד צריכים לחפש פי השם לפעמים אנחנו יכולים לחפש לפי המידע עצמו כמו שעשינו פה הגדרנו שיחפש תיקיות עם המידע פרונט דיפולט ופרונט שייני
         enum SpriteKeys: String, CodingKey {
-            case sprite = "frontDefault"
-            case shiny = "frontShiny"
+            case spriteURL = "frontDefault"
+            case shinyURL = "frontShiny"
         }
     }
     //זהו קוד איתחול שמפענחת אובייקט מגייסון
@@ -110,7 +110,7 @@ struct FetchedPokemon: Decodable{
         //השורה הזו מפענחת בעזרת המפתחות שיצרנו למעלה את המידע של סריטס
         let spriteContainer = try container.nestedContainer(keyedBy: CodingKeys.SpriteKeys.self, forKey: .sprites)
         //פה זה מפאנח את הפיאנוח מהשורה הקודמת ומתאים את המידע אליו
-        sprite = try spriteContainer.decode(URL.self, forKey: .sprite)
-        shiny = try spriteContainer.decode(URL.self, forKey: .shiny)
+        spriteURL = try spriteContainer.decode(URL.self, forKey: .spriteURL)
+        shinyURL = try spriteContainer.decode(URL.self, forKey: .shinyURL)
     }
 }

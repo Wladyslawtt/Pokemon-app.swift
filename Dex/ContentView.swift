@@ -62,7 +62,7 @@ struct ContentView: View {
                         ForEach(pokedex) { pokemon in
                             //כאן בגדרנו בסוגריים על מה להתבסס
                             NavigationLink(value: pokemon) {//כאן הגדרנו שיציג תמונה לכל תבנית
-                                AsyncImage(url: pokemon.sprite) { image in
+                                AsyncImage(url: pokemon.spriteURL) { image in
                                     image
                                         .resizable()
                                         .scaledToFit()
@@ -183,8 +183,9 @@ struct ContentView: View {
                     pokemon.specialAttack = fetchedPokemon.specialAttack
                     pokemon.specialDefense = fetchedPokemon.specialDefense
                     pokemon.speed = fetchedPokemon.speed
-                    pokemon.sprite = fetchedPokemon.sprite
-                    pokemon.shiny = fetchedPokemon.shiny
+                    pokemon.spriteURL = fetchedPokemon.spriteURL
+                    pokemon.shinyURL = fetchedPokemon.shinyURL
+                   
                     //זה בדיקה זמנים לראות שאכן הפונקציה של הסינון למועדף עובד
 //                    if pokemon.id % 2 == 0 {
 //                        pokemon.favorite = true
@@ -195,6 +196,25 @@ struct ContentView: View {
                 }catch{
                     print(error)
                 }
+            }
+            //כאן אנו מריצים את הפונקציה שיצרנו למטה שתשמור את כל מה שנוצר עי הקוד למעלה
+            storeSprites()
+        }
+    }
+    //הפונקציה הזו נועדה לשמור את כל התמונות של הפוקימונים אחרי שלוחצים פטש
+    private func storeSprites() {
+        Task {
+            do{
+                for pokemon in all {//אנחנו מריצים סשיין משותף פונקציית נתונים שמחזירים שלנו תגובה ונתונים אפס אומר לשמור רק את הדבר הראשון שהוא נתונים
+                    pokemon.sprite = try await URLSession.shared.data(from: pokemon.spriteURL!).0
+                    pokemon.shiny = try await URLSession.shared.data(from: pokemon.shinyURL!).0
+                    //זה שורה ששומרת לנו את התוצאה בסופו של דבר
+                    try viewContext.save()
+                    //שורה זו מריצה את הקוד בטרמינל כדי שנוכל לראות אם היא עובדת
+                    print("Sprites stored: \(pokemon.id): \(pokemon.name!.capitalized)")
+                }
+            } catch {
+                print(error)
             }
         }
     }

@@ -31,7 +31,7 @@ struct PokemonDetail: View {
                 //אפשר לראת אותו בסימולטור בוויו בצד אי אפשר כי משהו שבור פה אחי אבל בעיקרון יש תמונה פשוט לא רואים
                 //אם שייני פעיל התמונה תהיה במצב שייני ואם לא אז רגילה
                 //שייני זה מצב שהופך את הצבע של הפוקימון
-                AsyncImage(url: showShiny ? pokemon.shiny : pokemon.sprite) { image in
+                AsyncImage(url: showShiny ? pokemon.shinyURL : pokemon.spriteURL) { image in
                     image
                         .interpolation(.none)
                         .resizable()
