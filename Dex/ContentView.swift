@@ -61,15 +61,25 @@ struct ContentView: View {
                     Section {
                         ForEach(pokedex) { pokemon in
                             //כאן בגדרנו בסוגריים על מה להתבסס
-                            NavigationLink(value: pokemon) {//כאן הגדרנו שיציג תמונה לכל תבנית
-                                AsyncImage(url: pokemon.spriteURL) { image in
-                                    image
+                            NavigationLink(value: pokemon) {
+                                //בודק אם לפוקימון אין משתנה בספרייט
+                                //הקוד הזה אמור לתת לנו להשתמש בתמונות שנשמרות לנו בטלפון מבלי לגשת לאינטרנט כל פעם
+                                if pokemon.sprite == nil {
+                                    //כאן הגדרנו שיציג תמונה לכל תבנית
+                                    AsyncImage(url: pokemon.spriteURL) { image in
+                                        image
+                                            .resizable()
+                                            .scaledToFit()
+                                    } placeholder: {
+                                        ProgressView()
+                                    }
+                                    .frame(width: 100, height: 100)
+                                } else {//אם יש אז הוא אמור להחזיר את התמונה שהגדרנו בקובץ פוקימוןאקס
+                                    pokemon.spriteImage
                                         .resizable()
                                         .scaledToFit()
-                                } placeholder: {
-                                    ProgressView()
+                                        .frame(width: 100, height: 100)
                                 }
-                                .frame(width: 100, height: 100)
                                 //כאן אנו מגדירים את השמות שיופיעו ליד התמונה
                                 VStack(alignment: .leading) {
                                     HStack{

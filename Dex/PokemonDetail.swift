@@ -27,19 +27,33 @@ struct PokemonDetail: View {
                     .resizable()
                     .scaledToFit()
                     .shadow(color: .black, radius: 6)
-                //כאן יבאנו את התמונה של הפוקימון
-                //אפשר לראת אותו בסימולטור בוויו בצד אי אפשר כי משהו שבור פה אחי אבל בעיקרון יש תמונה פשוט לא רואים
-                //אם שייני פעיל התמונה תהיה במצב שייני ואם לא אז רגילה
-                //שייני זה מצב שהופך את הצבע של הפוקימון
-                AsyncImage(url: showShiny ? pokemon.shinyURL : pokemon.spriteURL) { image in
-                    image
+                //בודק אם במשתנים ספרייט או שייני אין משתנים
+                //אם אין אז הוא משתמש באסינקאימג שהגדרנו
+                //בעיקרון זה נותן לנו להשתמש בתמונות שנשמרו לנו בטלפון מבלי לגשת לאניטרנט כל פעם
+                if pokemon.sprite == nil || pokemon.shiny == nil {
+                    //כאן יבאנו את התמונה של הפוקימון
+                    //אפשר לראת אותו בסימולטור בוויו בצד אי אפשר כי משהו שבור פה אחי אבל בעיקרון יש תמונה פשוט לא רואים
+                    //אם שייני פעיל התמונה תהיה במצב שייני ואם לא אז רגילה
+                    //שייני זה מצב שהופך את הצבע של הפוקימון
+                    AsyncImage(url: showShiny ? pokemon.shinyURL : pokemon.spriteURL) { image in
+                        image
+                            .interpolation(.none)
+                            .resizable()
+                            .scaledToFit()
+                            .padding(.top, 50)
+                            .shadow(color: .black, radius: 6)
+                    } placeholder: {
+                        ProgressView()
+                    }
+                } else {
+                    //אם יש משתנים אז הוא בודק אם שואושייני טרו אז הוא מציג שייניאימג אם לא אז הוא מציג ספרייטאימג
+                    //שמנו את הפעולה בסוגריים כי הקוד כאן הוא בוליאני
+                    (showShiny ? pokemon.shinyImage : pokemon.spriteImage)
                         .interpolation(.none)
                         .resizable()
                         .scaledToFit()
                         .padding(.top, 50)
                         .shadow(color: .black, radius: 6)
-                } placeholder: {
-                    ProgressView()
                 }
             }
             HStack {//הבאנו על כל פוקימון לפי האיידי היחודי שלו שיהיה רשום מתחת לתמונה את הסוג שלו
