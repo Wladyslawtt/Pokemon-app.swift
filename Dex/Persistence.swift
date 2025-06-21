@@ -59,6 +59,8 @@ struct PersistenceController {
         container = NSPersistentContainer(name: "Dex")
         if inMemory {
             container.persistentStoreDescriptions.first!.url = URL(fileURLWithPath: "/dev/null")
+        } else {//הקוד הזה אחראי לכך ההפוקימונים יוצגו גם בוידגטים
+            container.persistentStoreDescriptions.first!.url = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.vladysapp.DexGroup")!.appending(path: "Dex.sqlite")
         }
         container.loadPersistentStores(completionHandler: { (storeDescription, error) in
             if let error = error as NSError? {
