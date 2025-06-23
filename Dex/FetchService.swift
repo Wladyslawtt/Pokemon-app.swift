@@ -14,8 +14,8 @@ struct FetchService {
     }
     //כאן אנו מגדירים מאיזה אתר הוא יפאנח את המידע
     private let baseURL = URL(string: "https://pokeapi.co/api/v2/pokemon")!
-//זו פונקציה אסינכרונית שמטרתה להביא מידע על פוקימון לפי מזהה איידי שמחזיר אובייקט מגוף שהגדרנו בפטשד פוקימון
-    func fetchPokemon(_ id: Int) async throws -> FetchedPokemon {
+//זו פונקציה אסינכרונית שמטרתה להביא מידע על פוקימון לפי מזהה איידי שמחזיר אובייקט מגוף שהגדרנו בפוקימון
+    func fetchPokemon(_ id: Int) async throws -> Pokemon {
 //השורה הזו יוצרת כתובת יוראל חדשה פטש יואראל על בסיס כתובת קיימת בייס יו אראל ומוסיפה לה נתיב נוסף במקרה הזה מספר האיידי של הפוקימון
 //פאס סטרינג לוקח את המספר של הפוקימון ממיר אותו לסוג של אות ומוסיפ לסוף של הכתובת אינטרנט כדי לגשת אליו
         let fetchURL = baseURL.appending(path: String(id))
@@ -29,8 +29,8 @@ struct FetchService {
         let decoder = JSONDecoder()
         //ופה הגדרנו לפאנח הכל לסטנדרט סנייק קייס
         decoder.keyDecodingStrategy = .convertFromSnakeCase
-        //היא מפענחת את הנתונים שהגיעו מהשרת דאטה למבנה סטרוקט בשם פטשד פוקימון
-        let pokemon = try decoder.decode(FetchedPokemon.self, from: data)
+        //היא מפענחת את הנתונים שהגיעו מהשרת דאטה למבנה סטרוקט בשם פוקימון
+        let pokemon = try decoder.decode(Pokemon.self, from: data)
         //פה הגדרנו שיציג בטרמינל את הפוקימונים
         print("Fetched pokemon: \(pokemon.id): \(pokemon.name.capitalized)")
         //ופה הגדרנו שיוציא לנו את מה שפיאנחנו
