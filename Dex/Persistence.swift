@@ -5,71 +5,41 @@
 //  Created by Vladyslav Tarabunin on 08/06/2025.
 //
 
-import CoreData
+import SwiftData
+import Foundation
 
+@MainActor //כאן הגדרנו שהקובץ פה יהיה קשור לוויו הראשי
 struct PersistenceController {
-// זה הדבר ששולט לנו בדאטה בייס
-    static let shared = PersistenceController()
 //הפונקציה פרוויו פוקימון מחזירה פוקימון אחד לדוגמה מתוך הדאטהסייס כדי שאפשר יהיה להשתמש בו בתצוגות פרוויוס בלי לטעון נתונים אמיתיים מהאפליקציה
     static var previewPokemon: Pokemon {//מגדיר משתנה סטטי בשם פרוויו פוקימון שמחזיר פוקימון
-        //יוצרים משתנה קונטקסט שמיבא את הקונטקסט מהדאטהבייס לפרוויו
-        //פרסיסטקונטרולר פרוויו זו גרסה מיוחדת של הדאטה בייס לפריוויו בלבד
-        let context = PersistenceController.preview.container.viewContext
-        //יוצר בקשת שליפה פטש מסוג פוקימון כלומר בקשה לקרוא אובייקטים מסוג פוקימון מהדאטהבייס
-        let fetchRequest: NSFetchRequest<Pokemon> = Pokemon.fetchRequest()
-        //מגביל את הבקשה שישלוף רק פורימון אחד במקום את כולם
-        fetchRequest.fetchLimit = 1
-        //יצרנו משתנה שיביא לנו את התוצאה
-        //המשתנה מנסה להוציא את התוצאה על קונטקסט ויבצע את שליפת הנתונים שהגדרנו למעלה
-        let results = try! context.fetch(fetchRequest)
-        //מחזיר לי את התוצאה עם פוקימון אחד כפי שהגדרנו
-        return results.first!
+        let decoder = JSONDecoder()
+        // יוצרים מופע של JSONDecoder – מחלקה שאחראית לפענח נתוני JSON לאובייקטים בסוויפט
+
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        // מגדירים לדקודר להשתמש באסטרטגיית המרה: במקום מפתחות בפורמט snake_case (כמו "base_experience")
+        // הוא יתאים אותם אוטומטית לשמות במבנה שלנו שכתובים ב-camelCase (כמו "baseExperience")
+
+        let pokemonData = try! Data(contentsOf: Bundle.main.url(forResource: "samplepokemon", withExtension: "json")!)
+        // טוענים את קובץ ה-JSON בשם "samplepokemon.json" מתוך קבצי הפרויקט (Bundle ראשי)
+        // וממירים אותו לאובייקט מסוג Data – כלומר נתונים בינאריים של הקובץ
+
+        let pokemon = try! decoder.decode(Pokemon.self, from: pokemonData)
+        // מפענחים את נתוני ה-JSON לאובייקט מסוג Pokemon באמצעות ה-decoder
+
+        return pokemon
     }
     
-//זה הדבר ששולט לנו בתצוגת הדאטה בייס שלנו
-    static let preview: PersistenceController = {
-        let result = PersistenceController(inMemory: true)
-        let viewContext = result.container.viewContext
+//זה הדבר ששולט לנו בתצוגת הדאטה בייס שלנו הלדוגמא של התצוגה המקדימה שלנו
+    static let preview: ModelContainer = {
+        let container = try! ModelContainer(for: Pokemon.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+        // יוצרים מיכל נתונים (ModelContainer) עבור המודל Pokemon, עם הגדרה שהנתונים יישמרו רק בזיכרון (ולא בדיסק)
 
-        let newPokemon = Pokemon(context: viewContext)
-        newPokemon.id = 1
-        newPokemon.name = "bulbasaur"
-        newPokemon.types = ["grass", "poison"]
-        newPokemon.hp = 45
-        newPokemon.attack = 49
-        newPokemon.defense = 49
-        newPokemon.specialAttack = 65
-        newPokemon.specialDefense = 65
-        newPokemon.speed = 45
-        newPokemon.spriteURL = URL(string: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/1.png")
-        newPokemon.shinyURL = URL(string: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/1.png")
-        
-        do {
-            try viewContext.save()
-        } catch {
-            print(error)
-        }
-        return result
+        container.mainContext.insert(previewPokemon)
+        // מוסיפים את אובייקט ה-preview (פוקימון לדוגמה) לקונטקסט הראשי של המיכל
+
+        return container
+        // מחזירים את המיכל שנוצר
+
     }()
-//קונטיינר זה הדבר ששומר לנו על המידע שאנו שמים בתוכו
-    let container: NSPersistentContainer
-//איניט זה פעולה שרצה אוטומטית כשהפרסיסטנס בקיצור בקר התמדה שלנו מאותחל כל פעם
-//איניט זה איתחול והוא מאתחל אטומטית את האפליקצייה ומריץ את הקוד שרשמנו בתוכו
-    init(inMemory: Bool = false) {
-        container = NSPersistentContainer(name: "Dex")
-        if inMemory {
-            container.persistentStoreDescriptions.first!.url = URL(fileURLWithPath: "/dev/null")
-        } else {//הקוד הזה אחראי לכך ההפוקימונים יוצגו גם בוידגטים
-            container.persistentStoreDescriptions.first!.url = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.vladysapp.DexGroup")!.appending(path: "Dex.sqlite")
-        }
-        container.loadPersistentStores(completionHandler: { (storeDescription, error) in
-            if let error = error as NSError? {
-                print(error)
-            }
-        })
-        //זהו קוד ששומר לנו את המידע שהוספנו בדאטה בייס
-        //בעיקרון אם יש כפולויות הוא מחבר אותן עם המידע שקיים כבר בדאטה בייס ןאם אין כפוליות הוא פשוט שומר אותן מחדש בדאטה בייס
-        container.viewContext.mergePolicy = NSMergePolicy.mergeByPropertyStoreTrump
-        container.viewContext.automaticallyMergesChangesFromParent = true
-    }
+
 }
