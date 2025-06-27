@@ -6,18 +6,14 @@
 //
 
 import SwiftUI
-import CoreData
+import SwiftData
 
 struct ContentView: View {
-    //זה נותן לנו גישה לדאטה בייס מנגר
-    @Environment(\.managedObjectContext) private var viewContext
-    //זוהי בקשה פטש רקווסט שמביאה נתונים ממסד הנתונים של קור דאטה במקרה הזה היא נועדה לשלוף את כל האובייקטים מסוג פוקימון ולשמור אותם במשתנה אול
-    @FetchRequest<Pokemon>(sortDescriptors: []) private var all
-//בקיצור הפטשים יוצרים תצוגות ממוחשבות עם כל הנתונים כמו חלונות בעצם כל פטש זה חלון נפרד סוגשל במקום שניצור אותם ידנית
-    @FetchRequest<Pokemon>(//זה פעולה שממיינת לנו את המידע ושומרת אותו במשתנה פוקידקס לדוגמא כאן אנו ממיינים לפי איידי
-        sortDescriptors: [SortDescriptor(\.id)],
-        animation: .default
-    )private var pokedex
+    //זה נותן לנו גישה דאטה מודל שלנו בסוויפט דאטה העתקנו מקובץ שיצרנו על בוויפט דאטה
+    @Environment(\.modelContext) private var modelContext
+    //זה תחליף לפטש ריקווסט אול שגם העתקנו
+    //השורה הזאת יוצרת משתנה פרטי פוקידקס שמכיל את כל הפוקימונים מהמיון לפי האיידי עם אנימצית ברירת מחדל שנמשכו מהדאטהבייס בצורה אוטומטית
+    @Query(sort: \Pokemon.id, animation: .default) private var pokedex: [Pokemon]
     //כאן יבאנו סרגל חיפוש
     @State private var searchText = ""
     //כאן הגדרנו סינון לפי אהובים כברירת מחדל הוא כבוי
@@ -41,7 +37,7 @@ struct ContentView: View {
     }
 
     var body: some View {//האיף מריצה ישר את כל הפוקימונים ומוסיפה חלון הוראות מה לעדות אם לא יוצג כלום
-        if all.isEmpty {//למקרה שהמסך יהיה ריק שתופיע הודע מה לעשות
+        if pokedex.isEmpty {//למקרה שהמסך יהיה ריק שתופיע הודע מה לעשות
             //הוספנו שיהיה ללחות על הפונקציה שיצרנו שיופיעו פוקימונים ומקרה ולא יופיע כלום
             ContentUnavailableView {
                 Label("NO POKEMON", image: .nopokemon)
@@ -83,7 +79,7 @@ struct ContentView: View {
                                 //כאן אנו מגדירים את השמות שיופיעו ליד התמונה
                                 VStack(alignment: .leading) {
                                     HStack{
-                                        Text(pokemon.name!.capitalized)
+                                        Text(pokemon.name.capitalized)
                                             .fontWeight(.bold)
                                         //כאן הגדרנו ליד כל מועדף תהיה כוכבית
                                         if pokemon.favorite{
@@ -93,7 +89,7 @@ struct ContentView: View {
                                     }
                                     
                                     HStack{//כאן הגדרנו שיציג את הסוג של כל פוקימון
-                                        ForEach(pokemon.types!, id: \.self) { type in
+                                        ForEach(pokemon.types, id: \.self) { type in
                                             Text(type.capitalized)
                                                 .font(.subheadline)
                                                 .fontWeight(.bold)
@@ -114,7 +110,7 @@ struct ContentView: View {
                                     pokemon.favorite.toggle()
                                     //כאן הגדרנו שמירת מועדפים ושיתפוס שגיאה אם יהיה
                                     do{
-                                        try viewContext.save()
+                                        try modelContext.save()
                                     }catch{
                                         print(error)
                                     }
@@ -124,7 +120,7 @@ struct ContentView: View {
                         }
                     } footer: {//הוספנו עוד חלון הזהרה עם כפתור איך לפתור את הבעיה הפעם בתוך התצוגה בראשית עצמה
                         //אם יש פחות מ151 פוקימונים זה יציג הזהרה ודרך פיתרון
-                        if all.count < 151 {
+                        if pokedex.count < 151 {
                             ContentUnavailableView {
                                 Label("Missing Pokemon", image: .nopokemon)
                             } description: {
@@ -142,18 +138,10 @@ struct ContentView: View {
                 .searchable(text: $searchText, prompt: "Find a Pokemon")
                 //כאן ביטלנו את התיקון האוטומטי
                 .autocorrectionDisabled()
-                //כאן הגדרנו מה יציג אחרי שנחפש
-                .onChange(of: searchText) {
-                    pokedex.nsPredicate = dynamicPredicate
-                }
-                //כאן הגדרנו שיציג לנו את הסינון
-                .onChange(of: filterByFavorites) {
-                    pokedex.nsPredicate = dynamicPredicate
-                }
+               
                 //כאן הגדרנו מה יציג בכל תבנית פוקימון בתוכה
                 .navigationDestination(for: Pokemon.self) { pokemon in
-                    PokemonDetail()
-                        .environmentObject(pokemon)
+                    PokemonDetail(pokemon: pokemon)
                  }
                 .toolbar {
                     ToolbarItem(placement: .navigationBarTrailing) {
@@ -181,28 +169,8 @@ struct ContentView: View {
                     //הפטש כאן קשור לפטש סרוויס שיבאנו למעלה
                     //הוא מיבא מהפטש סרוויס את האיידי ששמור בפטש פוקימון
                     let fetchedPokemon = try await fetcher.fetchPokemon(i)
-                    //כאן הגדרנו שיציג את הפוקימונים בוויוקונטנט למעלה
-                    let pokemon = Pokemon(context: viewContext)
-                    //כאן הגדרנו שיציג את הקטגוריות שפיענחנו בפטש סרוויס
-                    pokemon.id = fetchedPokemon.id
-                    pokemon.name = fetchedPokemon.name
-                    pokemon.types = fetchedPokemon.types
-                    pokemon.hp = fetchedPokemon.hp
-                    pokemon.attack = fetchedPokemon.attack
-                    pokemon.defense = fetchedPokemon.defense
-                    pokemon.specialAttack = fetchedPokemon.specialAttack
-                    pokemon.specialDefense = fetchedPokemon.specialDefense
-                    pokemon.speed = fetchedPokemon.speed
-                    pokemon.spriteURL = fetchedPokemon.spriteURL
-                    pokemon.shinyURL = fetchedPokemon.shinyURL
-                   
-                    //זה בדיקה זמנים לראות שאכן הפונקציה של הסינון למועדף עובד
-//                    if pokemon.id % 2 == 0 {
-//                        pokemon.favorite = true
-//                    }
-                    
-                    //כאן אנו שומרים את כל מה שהגדרנו במסד הנתונים
-                    try viewContext.save()
+                    //השורה מוסיפה את הפוקימון מהפטשריקווסט לתוך הדאטהבייס של האפליקציה
+                    modelContext.insert(fetchedPokemon)
                 }catch{
                     print(error)
                 }
@@ -215,13 +183,13 @@ struct ContentView: View {
     private func storeSprites() {
         Task {
             do{
-                for pokemon in all {//אנחנו מריצים סשיין משותף פונקציית נתונים שמחזירים שלנו תגובה ונתונים אפס אומר לשמור רק את הדבר הראשון שהוא נתונים
-                    pokemon.sprite = try await URLSession.shared.data(from: pokemon.spriteURL!).0
-                    pokemon.shiny = try await URLSession.shared.data(from: pokemon.shinyURL!).0
+                for pokemon in pokedex {//אנחנו מריצים סשיין משותף פונקציית נתונים שמחזירים לנו תגובה ונתונים אפס אומר לשמור רק את הדבר הראשון שהוא נתונים
+                    pokemon.sprite = try await URLSession.shared.data(from: pokemon.spriteURL).0
+                    pokemon.shiny = try await URLSession.shared.data(from: pokemon.shinyURL).0
                     //זה שורה ששומרת לנו את התוצאה בסופו של דבר
-                    try viewContext.save()
+                    try modelContext.save()
                     //שורה זו מריצה את הקוד בטרמינל כדי שנוכל לראות אם היא עובדת
-                    print("Sprites stored: \(pokemon.id): \(pokemon.name!.capitalized)")
+                    print("Sprites stored: \(pokemon.id): \(pokemon.name.capitalized)")
                 }
             } catch {
                 print(error)
@@ -233,5 +201,5 @@ struct ContentView: View {
 
 
 #Preview {
-    ContentView().environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
+    ContentView().modelContainer( PersistenceController.preview)
 }

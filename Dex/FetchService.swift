@@ -6,7 +6,10 @@
 //
 
 import Foundation
-//פה אנו מפאנחים מידע מהאימטרנט
+
+@MainActor
+
+//פה אנו מפאנחים מידע מהאינטרנט
 struct FetchService {
     //למקרה שלא יוכל לפאנח שישלח שגיאה
     enum FetchError: Error {
