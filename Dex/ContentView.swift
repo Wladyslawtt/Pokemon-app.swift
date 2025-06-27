@@ -21,7 +21,7 @@ struct ContentView: View {
     //כאן יבאנו את קובץ הפטש סקוויס
     let fetcher = FetchService()
     
-    //כאן אנו מגדירים את החיפוש עצמו
+    //כאן אנו מגדירים את החיפוש עצמו בשם דינמיק פרדיקייט
     private var dynamicPredicate: Predicate<Pokemon> {
     #Predicate<Pokemon> { pokemon in
         //אם סינון לפי מועדפים וטקסט פעיל
@@ -156,7 +156,7 @@ struct ContentView: View {
                 .toolbar {
                     ToolbarItem(placement: .navigationBarTrailing) {
                         Button { //כאן אנו מגדירים כפתור סינון
-                            .withAnimation{//הגדרנו אנימציה בעת הסינון
+                            withAnimation {//הגדרנו אנימציה בעת הסינון
                                 filterByFavorites.toggle() //מה הכפתור יעשה
                             }
                         } label: { //איך הכפתור יראה
