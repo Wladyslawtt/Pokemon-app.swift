@@ -20,21 +20,29 @@ struct ContentView: View {
     @State private var filterByFavorites = false
     //כאן יבאנו את קובץ הפטש סקוויס
     let fetcher = FetchService()
+    
     //כאן אנו מגדירים את החיפוש עצמו
-    private var dynamicPredicate: NSPredicate {
-        var predicates: [NSPredicate] = [] //החיפוש ריק כברירת מחדל כך הגדרנו
-        
-        //Search Predicate
-        if !searchText.isEmpty{//אם החיפוש לא ריק
-            predicates.append(NSPredicate(format: "name contains[c] %@", searchText))//לסנן לפי שם ולהציג רק מה שחיפשנו
+    private var dynamicPredicate: Predicate<Pokemon> {
+    #Predicate<Pokemon> { pokemon in
+        //אם סינון לפי מועדפים וטקסט פעיל
+        if filterByFavorites && !searchText.isEmpty {
+            //אז יש לסנן לפי מועדף לפי החיפוש
+            pokemon.favorite && pokemon.name.localizedStandardContains(searchText)
+        //אם לא פעיל השורת חיפוש
+        } else if !searchText.isEmpty {
+            //תציג רק שורת חיפוש
+            pokemon.name.localizedStandardContains(searchText)
+        //אם לא פעיל הסינון
+        } else if filterByFavorites {
+            //תציג רק מועדפים
+            pokemon.favorite
+        //אם שום דבר מכל זה
+        } else {
+            //אז תציג את הכל
+            true
         }
-        //Filter By Favourite Predicate
-        if filterByFavorites {//אם הוא מסונן לפי אהובים
-            predicates.append(NSPredicate(format: "favorite == %d", true))
-        }
-        //Combine Predicates
-        return NSCompoundPredicate(andPredicateWithSubpredicates: predicates)//כאן הוא מחזיר לנו את כל הסינון והחיפוש
     }
+}
 
     var body: some View {//האיף מריצה ישר את כל הפוקימונים ומוסיפה חלון הוראות מה לעדות אם לא יוצג כלום
         if pokedex.isEmpty {//למקרה שהמסך יהיה ריק שתופיע הודע מה לעשות
@@ -55,7 +63,8 @@ struct ContentView: View {
             NavigationStack {
                 List {
                     Section {
-                        ForEach(pokedex) { pokemon in
+                        //הגדרנו שינסה לסנן את הפוקימונים לפי תנאי דינמי כמו חיפוש או סינון ואם זה לא מצליח  שיציג את כל הפוקימונים כמו שהם
+                        ForEach((try? pokedex.filter(dynamicPredicate)) ?? pokedex) { pokemon in
                             //כאן בגדרנו בסוגריים על מה להתבסס
                             NavigationLink(value: pokemon) {
                                 //בודק אם לפוקימון אין משתנה בספרייט
@@ -138,7 +147,8 @@ struct ContentView: View {
                 .searchable(text: $searchText, prompt: "Find a Pokemon")
                 //כאן ביטלנו את התיקון האוטומטי
                 .autocorrectionDisabled()
-               
+                //כאן הדרנו אנימציה שיסנן יותר חלק
+                .animation(.default, value: searchText)
                 //כאן הגדרנו מה יציג בכל תבנית פוקימון בתוכה
                 .navigationDestination(for: Pokemon.self) { pokemon in
                     PokemonDetail(pokemon: pokemon)
@@ -146,7 +156,9 @@ struct ContentView: View {
                 .toolbar {
                     ToolbarItem(placement: .navigationBarTrailing) {
                         Button { //כאן אנו מגדירים כפתור סינון
-                            filterByFavorites.toggle() //מה הכפתור יעשה
+                            .withAnimation{//הגדרנו אנימציה בעת הסינון
+                                filterByFavorites.toggle() //מה הכפתור יעשה
+                            }
                         } label: { //איך הכפתור יראה
                             Label("Filter by favorites", systemImage: filterByFavorites ? "star.fill" : "star")
                             //אם הוא מסונן אז יהיה כוכב מלא ואם לא אז כוכב רגיל
