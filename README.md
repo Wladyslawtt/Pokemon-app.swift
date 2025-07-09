@@ -14,11 +14,10 @@
 
 ---
 <p float="left">
-  <img src="![Simulator Screenshot - iPhone 16 Pro - 2025-07-09 at 15 02 43](https://github.com/user-attachments/assets/7a689124-1ef2-4674-ae41-038c6e7a9ff7)
-" width="200" />
-  <img src="![Simulator Screenshot - iPhone 16 Pro - 2025-07-09 at 15 02 36](https://github.com/user-attachments/assets/6fd7dd75-a400-483c-932d-1623a826ca7b)
-" width="200" />
+  <img src="https://github.com/user-attachments/assets/7a689124-1ef2-4674-ae41-038c6e7a9ff7" width="200" />
+  <img src="https://github.com/user-attachments/assets/6fd7dd75-a400-483c-932d-1623a826ca7b" width="200" />
 </p>
+
 ---
 
 ## 🚀 Tech Stack
